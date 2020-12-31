@@ -14,17 +14,23 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 require("reflect-metadata");
 require("dotenv/config");
+const mongoose_1 = __importDefault(require("mongoose"));
 const apollo_server_express_1 = require("apollo-server-express");
 const express_1 = __importDefault(require("express"));
 const type_graphql_1 = require("type-graphql");
 const resolvers_1 = require("./resolvers");
 const PORT = process.env.PORT || 5000;
+const app = express_1.default();
 const bootstrap = () => __awaiter(void 0, void 0, void 0, function* () {
+    mongoose_1.default.connect(process.env.MONGO_URI || "", {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+    });
+    mongoose_1.default.connection.on("error", console.error.bind(console, "connection error:"));
     const schema = yield type_graphql_1.buildSchema({
-        resolvers: [resolvers_1.HelloResolver],
+        resolvers: [resolvers_1.CommentResolver],
     });
     const apolloServer = new apollo_server_express_1.ApolloServer({ schema });
-    const app = express_1.default();
     apolloServer.applyMiddleware({ app });
     app.use(express_1.default.static("public"));
     app.listen(PORT, () => console.log(`Listening on ${PORT}`));
