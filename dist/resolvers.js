@@ -21,15 +21,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CommentResolver = void 0;
+exports.MemberResolver = exports.CommentResolver = void 0;
 const type_graphql_1 = require("type-graphql");
 const models_1 = require("./models");
 const types_1 = require("./types");
+const bcrypt_1 = require("bcrypt");
 let CommentResolver = class CommentResolver {
     comments() {
-        return __awaiter(this, void 0, void 0, function* () {
-            return models_1.commentModel.find();
-        });
+        return models_1.commentModel.find();
     }
     postComment(content) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -39,7 +38,13 @@ let CommentResolver = class CommentResolver {
     }
     deleteComment(_id) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield models_1.commentModel.deleteOne({ _id: _id });
+            try {
+                yield models_1.commentModel.deleteOne({ _id: _id });
+            }
+            catch (err) {
+                console.error.bind(err);
+                return false;
+            }
             return true;
         });
     }
@@ -48,7 +53,7 @@ __decorate([
     type_graphql_1.Query(() => [types_1.Comment]),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", void 0)
 ], CommentResolver.prototype, "comments", null);
 __decorate([
     type_graphql_1.Mutation(() => types_1.Comment),
@@ -68,4 +73,45 @@ CommentResolver = __decorate([
     type_graphql_1.Resolver()
 ], CommentResolver);
 exports.CommentResolver = CommentResolver;
+let MemberResolver = class MemberResolver {
+    members() {
+        return models_1.userModel.find();
+    }
+    register(username, email, password) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const hashedPassword = yield bcrypt_1.hash(password, 12);
+                yield models_1.userModel.create({
+                    username: username,
+                    email: email,
+                    password: hashedPassword,
+                });
+            }
+            catch (err) {
+                console.error.bind(err);
+                return false;
+            }
+            return true;
+        });
+    }
+};
+__decorate([
+    type_graphql_1.Query(() => [types_1.User]),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], MemberResolver.prototype, "members", null);
+__decorate([
+    type_graphql_1.Mutation(() => Boolean),
+    __param(0, type_graphql_1.Arg("username")),
+    __param(1, type_graphql_1.Arg("email")),
+    __param(2, type_graphql_1.Arg("password")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, String]),
+    __metadata("design:returntype", Promise)
+], MemberResolver.prototype, "register", null);
+MemberResolver = __decorate([
+    type_graphql_1.Resolver()
+], MemberResolver);
+exports.MemberResolver = MemberResolver;
 //# sourceMappingURL=resolvers.js.map

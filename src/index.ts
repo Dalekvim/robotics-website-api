@@ -4,7 +4,7 @@ import mongoose from "mongoose";
 import { ApolloServer } from "apollo-server-express";
 import express from "express";
 import { buildSchema } from "type-graphql";
-import { CommentResolver } from "./resolvers";
+import { CommentResolver, MemberResolver } from "./resolvers";
 
 const PORT = process.env.PORT || 5000;
 const app = express();
@@ -20,7 +20,7 @@ const bootstrap = async () => {
   );
 
   const schema = await buildSchema({
-    resolvers: [CommentResolver],
+    resolvers: [CommentResolver, MemberResolver],
   });
   const apolloServer = new ApolloServer({ schema });
   apolloServer.applyMiddleware({ app });

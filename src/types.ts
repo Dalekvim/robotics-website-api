@@ -8,3 +8,21 @@ export class Comment {
   @Field({ description: "The content of the comment" })
   content: string;
 }
+
+@ObjectType({ description: "The user model" })
+export class User {
+  @Field(() => ID)
+  _id: string;
+
+  @Field()
+  username: string;
+
+  @Field()
+  email: string;
+
+  @Field()
+  password: string;
+
+  @Field()
+  bio: string;
+}

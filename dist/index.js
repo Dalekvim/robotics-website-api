@@ -28,7 +28,7 @@ const bootstrap = () => __awaiter(void 0, void 0, void 0, function* () {
     });
     mongoose_1.default.connection.on("error", console.error.bind(console, "connection error:"));
     const schema = yield type_graphql_1.buildSchema({
-        resolvers: [resolvers_1.CommentResolver],
+        resolvers: [resolvers_1.CommentResolver, resolvers_1.MemberResolver],
     });
     const apolloServer = new apollo_server_express_1.ApolloServer({ schema });
     apolloServer.applyMiddleware({ app });
