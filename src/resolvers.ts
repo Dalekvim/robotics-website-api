@@ -1,7 +1,9 @@
+import "dotenv/config";
 import { Arg, Mutation, Query, Resolver } from "type-graphql";
 import { commentModel, userModel } from "./models";
-import { Comment, User } from "./types";
-import { hash } from "bcrypt";
+import { Comment, LoginResponse, User } from "./types";
+import { compare, hash } from "bcrypt";
+import { sign } from "jsonwebtoken";
 
 @Resolver()
 export class CommentResolver {
@@ -50,5 +52,30 @@ export class MemberResolver {
       return false;
     }
     return true;
+  }
+  @Mutation(() => LoginResponse)
+  async login(
+    @Arg("email") email: string,
+    @Arg("password") password: string
+  ): Promise<LoginResponse> {
+    const member = await userModel.findOne({ email: email });
+
+    if (!member) {
+      throw new Error("could not find member");
+    }
+
+    const valid = await compare(password, member.password);
+
+    if (!valid) {
+      throw new Error("bad password");
+    }
+
+    // Login Successful
+
+    return {
+      accessToken: sign({ userId: member._id }, process.env.SECRET || "", {
+        expiresIn: "15m",
+      }),
+    };
   }
 }

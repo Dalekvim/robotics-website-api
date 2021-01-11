@@ -9,8 +9,18 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.User = exports.Comment = void 0;
+exports.User = exports.Comment = exports.LoginResponse = void 0;
 const type_graphql_1 = require("type-graphql");
+let LoginResponse = class LoginResponse {
+};
+__decorate([
+    type_graphql_1.Field(),
+    __metadata("design:type", String)
+], LoginResponse.prototype, "accessToken", void 0);
+LoginResponse = __decorate([
+    type_graphql_1.ObjectType()
+], LoginResponse);
+exports.LoginResponse = LoginResponse;
 let Comment = class Comment {
 };
 __decorate([
@@ -39,10 +49,6 @@ __decorate([
     type_graphql_1.Field(),
     __metadata("design:type", String)
 ], User.prototype, "email", void 0);
-__decorate([
-    type_graphql_1.Field(),
-    __metadata("design:type", String)
-], User.prototype, "password", void 0);
 __decorate([
     type_graphql_1.Field(),
     __metadata("design:type", String)

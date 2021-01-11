@@ -22,10 +22,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MemberResolver = exports.CommentResolver = void 0;
+require("dotenv/config");
 const type_graphql_1 = require("type-graphql");
 const models_1 = require("./models");
 const types_1 = require("./types");
 const bcrypt_1 = require("bcrypt");
+const jsonwebtoken_1 = require("jsonwebtoken");
 let CommentResolver = class CommentResolver {
     comments() {
         return models_1.commentModel.find();
@@ -94,6 +96,23 @@ let MemberResolver = class MemberResolver {
             return true;
         });
     }
+    login(email, password) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const member = yield models_1.userModel.findOne({ email: email });
+            if (!member) {
+                throw new Error("could not find member");
+            }
+            const valid = yield bcrypt_1.compare(password, member.password);
+            if (!valid) {
+                throw new Error("bad password");
+            }
+            return {
+                accessToken: jsonwebtoken_1.sign({ userId: member._id }, process.env.SECRET || "", {
+                    expiresIn: "15m",
+                }),
+            };
+        });
+    }
 };
 __decorate([
     type_graphql_1.Query(() => [types_1.User]),
@@ -110,6 +129,14 @@ __decorate([
     __metadata("design:paramtypes", [String, String, String]),
     __metadata("design:returntype", Promise)
 ], MemberResolver.prototype, "register", null);
+__decorate([
+    type_graphql_1.Mutation(() => types_1.LoginResponse),
+    __param(0, type_graphql_1.Arg("email")),
+    __param(1, type_graphql_1.Arg("password")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", Promise)
+], MemberResolver.prototype, "login", null);
 MemberResolver = __decorate([
     type_graphql_1.Resolver()
 ], MemberResolver);
