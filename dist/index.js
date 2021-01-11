@@ -23,6 +23,7 @@ const PORT = process.env.PORT || 5000;
 const app = express_1.default();
 const bootstrap = () => __awaiter(void 0, void 0, void 0, function* () {
     mongoose_1.default.connect(process.env.MONGO_URI || "", {
+        useCreateIndex: true,
         useNewUrlParser: true,
         useUnifiedTopology: true,
     });

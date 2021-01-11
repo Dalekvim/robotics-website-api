@@ -11,6 +11,7 @@ const app = express();
 
 const bootstrap = async () => {
   mongoose.connect(process.env.MONGO_URI || "", {
+    useCreateIndex: true,
     useNewUrlParser: true,
     useUnifiedTopology: true,
   });
