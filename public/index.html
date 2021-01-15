@@ -12,17 +12,68 @@
   </head>
   <body>
     <main class="container">
-      <h1>Wecome to the Robotics Website API</h1>
+      <h1 class="mt-3 mb-3">Wecome to the Robotics Website API</h1>
       <p>
-        Well your not quite there yet:
+        Welcome to this <a href="https://graphql.org/">GraphQL</a> API.
       </p>
       <p>
-        I made this API using GraphQL and Playground mode's automatically turned off in production.
+        If you are impatient, have read this before, or even if you just feel like clicking something, click <a href="/graphql">here</a> to go to the UI.
+      </p>
+      <h2>About this</h2>
+      <p>I created this API to learn mongodb and store comments from the section on my website.</p>
+      <p>You can view the full source code on <a href="https://github.com/Dalekvim/robotics-website-api">Github</a>.</p>
+      <img src="https://upload.wikimedia.org/wikipedia/commons/1/17/GraphQL_Logo.svg" alt="GraphQL_Logo" >
+      <h2 class="mt-3 mb-3">A bit about GraphQL</h2>
+      <p>
+        One of the benefits of using GraphQL (over REST) is that it gives you an amazing UI that lets you test out the queries that you make.
       </p>
       <p>
-        If you want me to turn it on for a bit, let me know.
+        There are other, more important, reasons for using it; for example, it allows for queries (from the client-side) to retrieve specific bits of data without the need for creating new routes.
+      </p>
+      <p>
+        But, I just used it because I liked how it looked.
+      </p>
+      <h3>Basic usage</h3>
+      <p>
+        Now I won't be able to explain this very well, but I will give you some pointers on how to use the UI:
+        <ol>
+          <li>
+            Write everything inside a pair of curly brackets.<br />
+            For example a query might look like this:<br />
+            <pre>
+<code>
+{
+  theColourOfTheSky {
+    colour
+  }
+}</code>
+            </pre>
+            The curly brackets after the 'theColourOfTheSky' query is what you want as a response (a colour).<br />
+          </li>
+          <li>To have a look at all the queries you can run, click on the DOCS tab on the right.</li>
+        </ol>
+        Now that you are all prepared click <a href="/graphql">here</a>.
+      </p>
+      <h2>Contact && Collaboration</h2>
+      <p>
+        Feel free to message me if you have any questions.
+        My email is on the <a href="https://dalekvim.github.io/robotics-website/#/contact">Robotics Website</a>.
+      </p>
+      <p>
+        Currently, I am working alone on this and, although I am a pretty competent person, I could definitely get more done with help.
       </p>
     </main>
+
+    <footer class="footer pt-3 pb-3">
+      <div class="container">
+        Resources I used to make this:
+        <ul>
+          <li><a href="https://youtu.be/25GS0MLT8JU">Ben Awad</a></li>
+          <li><a href="https://mongoosejs.com/">Mongoose</a></li>
+          <li><a href="https://typegraphql.com/">TypeGraphQL</a></li>
+        </ul>
+      </div>
+    </footer>
 
     <!-- Optional JavaScript; choose one of the two! -->
 
