@@ -27,7 +27,7 @@ const userSchema = new mongoose_1.Schema({
     username: { type: String, required: true },
     email: { type: String, required: true, index: { unique: true } },
     password: { type: String, required: true },
-    bio: String,
+    bio: { type: String, default: "Write a bit about yourself here." },
 });
-exports.userModel = mongoose_1.default.model("User", userSchema);
+exports.userModel = mongoose_1.model("User", userSchema);
 //# sourceMappingURL=models.js.map

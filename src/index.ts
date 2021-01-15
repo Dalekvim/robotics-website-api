@@ -9,11 +9,12 @@ import { CommentResolver, MemberResolver } from "./resolvers";
 const PORT = process.env.PORT || 5000;
 const app = express();
 
-const bootstrap = async () => {
+(async () => {
   mongoose.connect(process.env.MONGO_URI || "", {
     useCreateIndex: true,
     useNewUrlParser: true,
     useUnifiedTopology: true,
+    useFindAndModify: false,
   });
   mongoose.connection.on(
     "error",
@@ -23,11 +24,14 @@ const bootstrap = async () => {
   const schema = await buildSchema({
     resolvers: [CommentResolver, MemberResolver],
   });
-  const apolloServer = new ApolloServer({ schema });
+  const apolloServer = new ApolloServer({
+    schema,
+    introspection: true,
+    playground: true,
+    context: ({ req, res }) => ({ req, res }),
+  });
   apolloServer.applyMiddleware({ app });
 
   app.use(express.static("public"));
   app.listen(PORT, () => console.log(`Listening on ${PORT}`));
-};
-
-bootstrap();
+})();

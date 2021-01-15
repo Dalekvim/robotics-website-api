@@ -28,11 +28,12 @@ const models_1 = require("./models");
 const types_1 = require("./types");
 const bcrypt_1 = require("bcrypt");
 const jsonwebtoken_1 = require("jsonwebtoken");
+const auth_1 = require("./auth");
 let CommentResolver = class CommentResolver {
     comments() {
         return models_1.commentModel.find();
     }
-    postComment(content) {
+    createComment(content) {
         return __awaiter(this, void 0, void 0, function* () {
             const newComment = new models_1.commentModel({ content });
             return yield newComment.save();
@@ -41,11 +42,23 @@ let CommentResolver = class CommentResolver {
     deleteComment(_id) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                yield models_1.commentModel.deleteOne({ _id: _id });
+                yield models_1.commentModel.findByIdAndDelete(_id);
             }
             catch (err) {
                 console.error.bind(err);
                 return false;
+            }
+            return true;
+        });
+    }
+    updateComment(_id, content) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                yield models_1.commentModel.findByIdAndUpdate(_id, { content: content });
+            }
+            catch (err) {
+                console.error.bind(err);
+                return true;
             }
             return true;
         });
@@ -63,14 +76,20 @@ __decorate([
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
-], CommentResolver.prototype, "postComment", null);
+], CommentResolver.prototype, "createComment", null);
 __decorate([
-    type_graphql_1.Mutation(() => Boolean),
     __param(0, type_graphql_1.Arg("_id")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], CommentResolver.prototype, "deleteComment", null);
+__decorate([
+    __param(0, type_graphql_1.Arg("_id")),
+    __param(1, type_graphql_1.Arg("content")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", Promise)
+], CommentResolver.prototype, "updateComment", null);
 CommentResolver = __decorate([
     type_graphql_1.Resolver()
 ], CommentResolver);
@@ -107,10 +126,40 @@ let MemberResolver = class MemberResolver {
                 throw new Error("bad password");
             }
             return {
-                accessToken: jsonwebtoken_1.sign({ userId: member._id }, process.env.SECRET || "", {
+                accessToken: jsonwebtoken_1.sign({ userId: member._id }, process.env.SECRET, {
                     expiresIn: "15m",
                 }),
             };
+        });
+    }
+    updateUsername(_id, username, { payload }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (payload.userId !== _id) {
+                throw new Error("invalid token");
+            }
+            try {
+                yield models_1.userModel.findByIdAndUpdate(_id, { username: username });
+            }
+            catch (err) {
+                console.error.bind(err);
+                return false;
+            }
+            return true;
+        });
+    }
+    updateBio(_id, bio, { payload }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (payload.userId !== _id) {
+                throw new Error("invalid token");
+            }
+            try {
+                yield models_1.userModel.findByIdAndUpdate(_id, { bio: bio });
+            }
+            catch (err) {
+                console.error.bind(err);
+                return false;
+            }
+            return true;
         });
     }
 };
@@ -137,6 +186,26 @@ __decorate([
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], MemberResolver.prototype, "login", null);
+__decorate([
+    type_graphql_1.Mutation(() => Boolean),
+    type_graphql_1.UseMiddleware(auth_1.isAuth),
+    __param(0, type_graphql_1.Arg("_id")),
+    __param(1, type_graphql_1.Arg("username")),
+    __param(2, type_graphql_1.Ctx()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, Object]),
+    __metadata("design:returntype", Promise)
+], MemberResolver.prototype, "updateUsername", null);
+__decorate([
+    type_graphql_1.Mutation(() => Boolean),
+    type_graphql_1.UseMiddleware(auth_1.isAuth),
+    __param(0, type_graphql_1.Arg("_id")),
+    __param(1, type_graphql_1.Arg("bio")),
+    __param(2, type_graphql_1.Ctx()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, Object]),
+    __metadata("design:returntype", Promise)
+], MemberResolver.prototype, "updateBio", null);
 MemberResolver = __decorate([
     type_graphql_1.Resolver()
 ], MemberResolver);

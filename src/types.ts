@@ -1,11 +1,5 @@
 import { Field, ID, ObjectType } from "type-graphql";
 
-@ObjectType()
-export class LoginResponse {
-  @Field()
-  accessToken: string;
-}
-
 @ObjectType({ description: "The comment model" })
 export class Comment {
   @Field(() => ID)
@@ -31,4 +25,10 @@ export class User {
 
   @Field()
   bio: string;
+}
+
+@ObjectType()
+export class LoginResponse {
+  @Field()
+  accessToken: string;
 }
