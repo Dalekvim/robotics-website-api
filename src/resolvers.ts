@@ -7,30 +7,40 @@ import {
   Resolver,
   UseMiddleware,
 } from "type-graphql";
-import { commentModel, userModel } from "./models";
-import { Comment, LoginResponse, User } from "./types";
+import { CommentModel, PostModel, UserModel } from "./models";
+import { Comment, LoginResponse, Post, User } from "./entities";
 import { compare, hash } from "bcrypt";
 import { sign } from "jsonwebtoken";
 import { isAuth } from "./auth";
-import { MyContext } from "./tsTypes";
+import { MyContext } from "./types";
 
 @Resolver()
 export class CommentResolver {
   @Query(() => [Comment])
   comments() {
-    return commentModel.find();
+    return CommentModel.find();
   }
 
   @Mutation(() => Comment)
   async createComment(@Arg("content") content: string): Promise<Comment> {
-    const newComment = new commentModel({ content });
-    return await newComment.save();
+    return await CommentModel.create({ content });
   }
 
-  // @Mutation(() => Boolean)
-  async deleteComment(@Arg("_id") _id: string): Promise<boolean> {
+  @Mutation(() => Boolean)
+  @UseMiddleware(isAuth)
+  async deleteComment(
+    @Arg("_id") _id: string,
+    @Ctx() { payload }: MyContext
+  ): Promise<boolean> {
     try {
-      await commentModel.findByIdAndDelete(_id);
+      const user = await UserModel.findById(payload!.userId).exec();
+      if (!user) {
+        throw new Error("only admin can delete comments");
+      }
+      if (!user.admin) {
+        return false;
+      }
+      await CommentModel.findByIdAndDelete(_id);
     } catch (err) {
       console.error.bind(err);
       return false;
@@ -44,7 +54,7 @@ export class CommentResolver {
     @Arg("content") content: string
   ): Promise<boolean> {
     try {
-      await commentModel.findByIdAndUpdate(_id, { content: content });
+      await CommentModel.findByIdAndUpdate(_id, { content: content });
     } catch (err) {
       console.error.bind(err);
       return true;
@@ -54,10 +64,38 @@ export class CommentResolver {
 }
 
 @Resolver()
+export class PostResolver {
+  @Query(() => [Post])
+  posts() {
+    return PostModel.find();
+  }
+
+  @Mutation(() => Boolean)
+  @UseMiddleware(isAuth)
+  async createPost(
+    @Arg("title") title: string,
+    @Arg("content") content: string,
+    @Ctx() { payload }: MyContext
+  ) {
+    try {
+      const author = await UserModel.findById(payload!.userId).exec();
+      if (!author) {
+        throw new Error("login to create a post");
+      }
+      await PostModel.create({ author, title, content });
+    } catch (err) {
+      console.error.bind(err);
+      return false;
+    }
+    return true;
+  }
+}
+
+@Resolver()
 export class MemberResolver {
   @Query(() => [User])
   members() {
-    return userModel.find();
+    return UserModel.find();
   }
 
   @Mutation(() => Boolean)
@@ -68,7 +106,7 @@ export class MemberResolver {
   ) {
     try {
       const hashedPassword = await hash(password, 12);
-      await userModel.create({
+      await UserModel.create({
         username: username,
         email: email,
         password: hashedPassword,
@@ -85,16 +123,16 @@ export class MemberResolver {
     @Arg("email") email: string,
     @Arg("password") password: string
   ): Promise<LoginResponse> {
-    const member = await userModel.findOne({ email: email });
+    const member = await UserModel.findOne({ email: email });
 
     if (!member) {
-      throw new Error("could not find member");
+      throw new Error("Could not find that member.");
     }
 
     const valid = await compare(password, member.password);
 
     if (!valid) {
-      throw new Error("bad password");
+      throw new Error("Bad password!");
     }
 
     // Login Successful
@@ -103,10 +141,31 @@ export class MemberResolver {
       accessToken: sign({ userId: member._id }, process.env.SECRET!, {
         expiresIn: "15m",
       }),
+      user: member,
     };
   }
 
   @Mutation(() => Boolean)
+  @UseMiddleware(isAuth)
+  async changePassword(
+    @Arg("_id") _id: string,
+    @Arg("password") password: string,
+    @Ctx() { payload }: MyContext
+  ) {
+    const hashedPassword = await hash(password, 12);
+    try {
+      if (payload!.userId !== _id) {
+        throw new Error("wrong user");
+      }
+      await UserModel.findByIdAndUpdate(_id, {
+        password: hashedPassword,
+      });
+    } catch (err) {
+      console.error.bind(err);
+    }
+  }
+
+  // @Mutation(() => Boolean)
   @UseMiddleware(isAuth)
   async updateUsername(
     @Arg("_id") _id: string,
@@ -118,7 +177,7 @@ export class MemberResolver {
     }
 
     try {
-      await userModel.findByIdAndUpdate(_id, { username: username });
+      await UserModel.findByIdAndUpdate(_id, { username: username });
     } catch (err) {
       console.error.bind(err);
       return false;
@@ -138,7 +197,7 @@ export class MemberResolver {
     }
 
     try {
-      await userModel.findByIdAndUpdate(_id, { bio: bio });
+      await UserModel.findByIdAndUpdate(_id, { bio: bio });
     } catch (err) {
       console.error.bind(err);
       return false;

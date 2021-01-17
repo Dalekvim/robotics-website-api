@@ -21,28 +21,34 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.MemberResolver = exports.CommentResolver = void 0;
+exports.MemberResolver = exports.PostResolver = exports.CommentResolver = void 0;
 require("dotenv/config");
 const type_graphql_1 = require("type-graphql");
 const models_1 = require("./models");
-const types_1 = require("./types");
+const entities_1 = require("./entities");
 const bcrypt_1 = require("bcrypt");
 const jsonwebtoken_1 = require("jsonwebtoken");
 const auth_1 = require("./auth");
 let CommentResolver = class CommentResolver {
     comments() {
-        return models_1.commentModel.find();
+        return models_1.CommentModel.find();
     }
     createComment(content) {
         return __awaiter(this, void 0, void 0, function* () {
-            const newComment = new models_1.commentModel({ content });
-            return yield newComment.save();
+            return yield models_1.CommentModel.create({ content });
         });
     }
-    deleteComment(_id) {
+    deleteComment(_id, { payload }) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                yield models_1.commentModel.findByIdAndDelete(_id);
+                const user = yield models_1.UserModel.findById(payload.userId).exec();
+                if (!user) {
+                    throw new Error("only admin can delete comments");
+                }
+                if (!user.admin) {
+                    return false;
+                }
+                yield models_1.CommentModel.findByIdAndDelete(_id);
             }
             catch (err) {
                 console.error.bind(err);
@@ -54,7 +60,7 @@ let CommentResolver = class CommentResolver {
     updateComment(_id, content) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                yield models_1.commentModel.findByIdAndUpdate(_id, { content: content });
+                yield models_1.CommentModel.findByIdAndUpdate(_id, { content: content });
             }
             catch (err) {
                 console.error.bind(err);
@@ -65,22 +71,25 @@ let CommentResolver = class CommentResolver {
     }
 };
 __decorate([
-    type_graphql_1.Query(() => [types_1.Comment]),
+    type_graphql_1.Query(() => [entities_1.Comment]),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], CommentResolver.prototype, "comments", null);
 __decorate([
-    type_graphql_1.Mutation(() => types_1.Comment),
+    type_graphql_1.Mutation(() => entities_1.Comment),
     __param(0, type_graphql_1.Arg("content")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], CommentResolver.prototype, "createComment", null);
 __decorate([
+    type_graphql_1.Mutation(() => Boolean),
+    type_graphql_1.UseMiddleware(auth_1.isAuth),
     __param(0, type_graphql_1.Arg("_id")),
+    __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], CommentResolver.prototype, "deleteComment", null);
 __decorate([
@@ -94,15 +103,56 @@ CommentResolver = __decorate([
     type_graphql_1.Resolver()
 ], CommentResolver);
 exports.CommentResolver = CommentResolver;
+let PostResolver = class PostResolver {
+    posts() {
+        return models_1.PostModel.find();
+    }
+    createPost(title, content, { payload }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const author = yield models_1.UserModel.findById(payload.userId).exec();
+                if (!author) {
+                    throw new Error("login to create a post");
+                }
+                yield models_1.PostModel.create({ author, title, content });
+            }
+            catch (err) {
+                console.error.bind(err);
+                return false;
+            }
+            return true;
+        });
+    }
+};
+__decorate([
+    type_graphql_1.Query(() => [entities_1.Post]),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], PostResolver.prototype, "posts", null);
+__decorate([
+    type_graphql_1.Mutation(() => Boolean),
+    type_graphql_1.UseMiddleware(auth_1.isAuth),
+    __param(0, type_graphql_1.Arg("title")),
+    __param(1, type_graphql_1.Arg("content")),
+    __param(2, type_graphql_1.Ctx()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, Object]),
+    __metadata("design:returntype", Promise)
+], PostResolver.prototype, "createPost", null);
+PostResolver = __decorate([
+    type_graphql_1.Resolver()
+], PostResolver);
+exports.PostResolver = PostResolver;
 let MemberResolver = class MemberResolver {
     members() {
-        return models_1.userModel.find();
+        return models_1.UserModel.find();
     }
     register(username, email, password) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const hashedPassword = yield bcrypt_1.hash(password, 12);
-                yield models_1.userModel.create({
+                yield models_1.UserModel.create({
                     username: username,
                     email: email,
                     password: hashedPassword,
@@ -117,19 +167,36 @@ let MemberResolver = class MemberResolver {
     }
     login(email, password) {
         return __awaiter(this, void 0, void 0, function* () {
-            const member = yield models_1.userModel.findOne({ email: email });
+            const member = yield models_1.UserModel.findOne({ email: email });
             if (!member) {
-                throw new Error("could not find member");
+                throw new Error("Could not find that member.");
             }
             const valid = yield bcrypt_1.compare(password, member.password);
             if (!valid) {
-                throw new Error("bad password");
+                throw new Error("Bad password!");
             }
             return {
                 accessToken: jsonwebtoken_1.sign({ userId: member._id }, process.env.SECRET, {
                     expiresIn: "15m",
                 }),
+                user: member,
             };
+        });
+    }
+    changePassword(_id, password, { payload }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const hashedPassword = yield bcrypt_1.hash(password, 12);
+            try {
+                if (payload.userId !== _id) {
+                    throw new Error("wrong user");
+                }
+                yield models_1.UserModel.findByIdAndUpdate(_id, {
+                    password: hashedPassword,
+                });
+            }
+            catch (err) {
+                console.error.bind(err);
+            }
         });
     }
     updateUsername(_id, username, { payload }) {
@@ -138,7 +205,7 @@ let MemberResolver = class MemberResolver {
                 throw new Error("invalid token");
             }
             try {
-                yield models_1.userModel.findByIdAndUpdate(_id, { username: username });
+                yield models_1.UserModel.findByIdAndUpdate(_id, { username: username });
             }
             catch (err) {
                 console.error.bind(err);
@@ -153,7 +220,7 @@ let MemberResolver = class MemberResolver {
                 throw new Error("invalid token");
             }
             try {
-                yield models_1.userModel.findByIdAndUpdate(_id, { bio: bio });
+                yield models_1.UserModel.findByIdAndUpdate(_id, { bio: bio });
             }
             catch (err) {
                 console.error.bind(err);
@@ -164,7 +231,7 @@ let MemberResolver = class MemberResolver {
     }
 };
 __decorate([
-    type_graphql_1.Query(() => [types_1.User]),
+    type_graphql_1.Query(() => [entities_1.User]),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
@@ -179,7 +246,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], MemberResolver.prototype, "register", null);
 __decorate([
-    type_graphql_1.Mutation(() => types_1.LoginResponse),
+    type_graphql_1.Mutation(() => entities_1.LoginResponse),
     __param(0, type_graphql_1.Arg("email")),
     __param(1, type_graphql_1.Arg("password")),
     __metadata("design:type", Function),
@@ -188,6 +255,15 @@ __decorate([
 ], MemberResolver.prototype, "login", null);
 __decorate([
     type_graphql_1.Mutation(() => Boolean),
+    type_graphql_1.UseMiddleware(auth_1.isAuth),
+    __param(0, type_graphql_1.Arg("_id")),
+    __param(1, type_graphql_1.Arg("password")),
+    __param(2, type_graphql_1.Ctx()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, Object]),
+    __metadata("design:returntype", Promise)
+], MemberResolver.prototype, "changePassword", null);
+__decorate([
     type_graphql_1.UseMiddleware(auth_1.isAuth),
     __param(0, type_graphql_1.Arg("_id")),
     __param(1, type_graphql_1.Arg("username")),
