@@ -33,6 +33,16 @@ let UserResolver = class UserResolver {
     members() {
         return models_1.UserModel.find();
     }
+    currentUser({ payload }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                return yield models_1.UserModel.findById(payload.userId).exec();
+            }
+            catch (_a) {
+                throw new Error("Invalid accessToken.");
+            }
+        });
+    }
     register(firstName, lastName, email, password) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
@@ -125,6 +135,14 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], UserResolver.prototype, "members", null);
+__decorate([
+    type_graphql_1.Query(() => User_1.User),
+    type_graphql_1.UseMiddleware(auth_1.isAuth),
+    __param(0, type_graphql_1.Ctx()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], UserResolver.prototype, "currentUser", null);
 __decorate([
     type_graphql_1.Mutation(() => Boolean),
     __param(0, type_graphql_1.Arg("firstName")),

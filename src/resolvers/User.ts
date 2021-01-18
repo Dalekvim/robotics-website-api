@@ -21,6 +21,16 @@ export class UserResolver {
     return UserModel.find();
   }
 
+  @Query(() => User)
+  @UseMiddleware(isAuth)
+  async currentUser(@Ctx() { payload }: MyContext) {
+    try {
+      return await UserModel.findById(payload!.userId).exec();
+    } catch {
+      throw new Error("Invalid accessToken.");
+    }
+  }
+
   @Mutation(() => Boolean)
   async register(
     @Arg("firstName") firstName: string,
