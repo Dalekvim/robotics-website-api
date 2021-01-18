@@ -148,12 +148,13 @@ let MemberResolver = class MemberResolver {
     members() {
         return models_1.UserModel.find();
     }
-    register(username, email, password) {
+    register(firstName, lastName, email, password) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const hashedPassword = yield bcrypt_1.hash(password, 12);
                 yield models_1.UserModel.create({
-                    username: username,
+                    firstName: firstName,
+                    lastName: lastName,
                     email: email,
                     password: hashedPassword,
                 });
@@ -199,13 +200,16 @@ let MemberResolver = class MemberResolver {
             }
         });
     }
-    updateUsername(_id, username, { payload }) {
+    updateName(_id, firstName, lastName, { payload }) {
         return __awaiter(this, void 0, void 0, function* () {
             if (payload.userId !== _id) {
                 throw new Error("invalid token");
             }
             try {
-                yield models_1.UserModel.findByIdAndUpdate(_id, { username: username });
+                yield models_1.UserModel.findByIdAndUpdate(_id, {
+                    firstName: firstName,
+                    lastName: lastName,
+                });
             }
             catch (err) {
                 console.error.bind(err);
@@ -238,11 +242,12 @@ __decorate([
 ], MemberResolver.prototype, "members", null);
 __decorate([
     type_graphql_1.Mutation(() => Boolean),
-    __param(0, type_graphql_1.Arg("username")),
-    __param(1, type_graphql_1.Arg("email")),
-    __param(2, type_graphql_1.Arg("password")),
+    __param(0, type_graphql_1.Arg("firstName")),
+    __param(1, type_graphql_1.Arg("lastName")),
+    __param(2, type_graphql_1.Arg("email")),
+    __param(3, type_graphql_1.Arg("password")),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, String]),
+    __metadata("design:paramtypes", [String, String, String, String]),
     __metadata("design:returntype", Promise)
 ], MemberResolver.prototype, "register", null);
 __decorate([
@@ -264,14 +269,16 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], MemberResolver.prototype, "changePassword", null);
 __decorate([
+    type_graphql_1.Mutation(() => Boolean),
     type_graphql_1.UseMiddleware(auth_1.isAuth),
     __param(0, type_graphql_1.Arg("_id")),
-    __param(1, type_graphql_1.Arg("username")),
-    __param(2, type_graphql_1.Ctx()),
+    __param(1, type_graphql_1.Arg("firstName")),
+    __param(2, type_graphql_1.Arg("lastName")),
+    __param(3, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, Object]),
+    __metadata("design:paramtypes", [String, String, String, Object]),
     __metadata("design:returntype", Promise)
-], MemberResolver.prototype, "updateUsername", null);
+], MemberResolver.prototype, "updateName", null);
 __decorate([
     type_graphql_1.Mutation(() => Boolean),
     type_graphql_1.UseMiddleware(auth_1.isAuth),

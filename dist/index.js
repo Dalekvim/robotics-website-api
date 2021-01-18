@@ -18,7 +18,9 @@ const mongoose_1 = __importDefault(require("mongoose"));
 const apollo_server_express_1 = require("apollo-server-express");
 const express_1 = __importDefault(require("express"));
 const type_graphql_1 = require("type-graphql");
-const resolvers_1 = require("./resolvers");
+const Comment_1 = require("./resolvers/Comment");
+const Post_1 = require("./resolvers/Post");
+const User_1 = require("./resolvers/User");
 const PORT = process.env.PORT || 5000;
 const app = express_1.default();
 (() => __awaiter(void 0, void 0, void 0, function* () {
@@ -30,7 +32,7 @@ const app = express_1.default();
     });
     mongoose_1.default.connection.on("error", console.error.bind(console, "connection error:"));
     const schema = yield type_graphql_1.buildSchema({
-        resolvers: [resolvers_1.CommentResolver, resolvers_1.MemberResolver],
+        resolvers: [Comment_1.CommentResolver, Post_1.PostResolver, User_1.UserResolver],
     });
     const apolloServer = new apollo_server_express_1.ApolloServer({
         schema,

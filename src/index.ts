@@ -4,7 +4,9 @@ import mongoose from "mongoose";
 import { ApolloServer } from "apollo-server-express";
 import express from "express";
 import { buildSchema } from "type-graphql";
-import { CommentResolver, MemberResolver } from "./resolvers";
+import { CommentResolver } from "./resolvers/Comment";
+import { PostResolver } from "./resolvers/Post";
+import { UserResolver } from "./resolvers/User";
 
 const PORT = process.env.PORT || 5000;
 const app = express();
@@ -22,7 +24,7 @@ const app = express();
   );
 
   const schema = await buildSchema({
-    resolvers: [CommentResolver, MemberResolver],
+    resolvers: [CommentResolver, PostResolver, UserResolver],
   });
   const apolloServer = new ApolloServer({
     schema,
