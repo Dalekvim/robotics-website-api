@@ -113,13 +113,13 @@ let UserResolver = class UserResolver {
             return true;
         });
     }
-    updateBio(_id, bio, { payload }) {
+    updateBio(bio, { payload }) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (payload.userId !== _id) {
+            if (!payload) {
                 throw new Error("invalid token");
             }
             try {
-                yield models_1.UserModel.findByIdAndUpdate(_id, { bio: bio });
+                yield models_1.UserModel.findByIdAndUpdate(payload.userId, { bio: bio });
             }
             catch (err) {
                 console.error.bind(err);
@@ -185,11 +185,9 @@ __decorate([
 __decorate([
     type_graphql_1.Mutation(() => Boolean),
     type_graphql_1.UseMiddleware(auth_1.isAuth),
-    __param(0, type_graphql_1.Arg("_id")),
-    __param(1, type_graphql_1.Arg("bio")),
-    __param(2, type_graphql_1.Ctx()),
+    __param(0, type_graphql_1.Arg("bio")), __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, Object]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "updateBio", null);
 UserResolver = __decorate([
