@@ -126,17 +126,13 @@ export class UserResolver {
 
   @Mutation(() => Boolean)
   @UseMiddleware(isAuth)
-  async updateBio(
-    @Arg("_id") _id: string,
-    @Arg("bio") bio: string,
-    @Ctx() { payload }: MyContext
-  ) {
-    if (payload!.userId !== _id) {
+  async updateBio(@Arg("bio") bio: string, @Ctx() { payload }: MyContext) {
+    if (!payload) {
       throw new Error("invalid token");
     }
 
     try {
-      await UserModel.findByIdAndUpdate(_id, { bio: bio });
+      await UserModel.findByIdAndUpdate(payload.userId, { bio: bio });
     } catch (err) {
       console.error.bind(err);
       return false;
