@@ -25,6 +25,10 @@ __decorate([
     __metadata("design:type", Date)
 ], Post.prototype, "createdAt", void 0);
 __decorate([
+    type_graphql_1.Field(),
+    __metadata("design:type", Date)
+], Post.prototype, "updatedAt", void 0);
+__decorate([
     type_graphql_1.Field(() => User_1.User),
     typegoose_1.prop({ ref: () => User_1.User, required: true }),
     __metadata("design:type", Object)

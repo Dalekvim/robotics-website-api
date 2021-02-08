@@ -26,6 +26,7 @@ const auth_1 = require("../auth");
 const Post_1 = require("../entities/Post");
 const models_1 = require("../models");
 const type_graphql_1 = require("type-graphql");
+const mongoose_1 = require("mongoose");
 let PostResolver = class PostResolver {
     posts() {
         return models_1.PostModel.find();
@@ -33,6 +34,9 @@ let PostResolver = class PostResolver {
     createPost(title, content, { payload }) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
+                if (!payload) {
+                    throw new Error("no payload");
+                }
                 const author = yield models_1.UserModel.findById(payload.userId).exec();
                 if (!author) {
                     throw new Error("login to create a post");
@@ -46,12 +50,44 @@ let PostResolver = class PostResolver {
             return true;
         });
     }
+    deletePost(_id, { payload }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                if (!payload) {
+                    throw new Error("no payload");
+                }
+                yield varifyUser(payload, _id);
+                yield models_1.PostModel.findByIdAndDelete(_id).exec();
+            }
+            catch (err) {
+                console.error.bind(err);
+                return false;
+            }
+            return true;
+        });
+    }
+    updatePost(_id, title, content, { payload }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                if (!payload) {
+                    throw new Error("no payload");
+                }
+                yield varifyUser(payload, _id);
+                yield models_1.PostModel.findByIdAndUpdate(_id, { title, content });
+            }
+            catch (err) {
+                console.error.bind(err);
+                return false;
+            }
+            return true;
+        });
+    }
 };
 __decorate([
     type_graphql_1.Query(() => [Post_1.Post]),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", mongoose_1.DocumentQuery)
 ], PostResolver.prototype, "posts", null);
 __decorate([
     type_graphql_1.Mutation(() => Boolean),
@@ -63,8 +99,44 @@ __decorate([
     __metadata("design:paramtypes", [String, String, Object]),
     __metadata("design:returntype", Promise)
 ], PostResolver.prototype, "createPost", null);
+__decorate([
+    type_graphql_1.Mutation(() => Boolean),
+    type_graphql_1.UseMiddleware(auth_1.isAuth),
+    __param(0, type_graphql_1.Arg("_id")),
+    __param(1, type_graphql_1.Ctx()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], PostResolver.prototype, "deletePost", null);
+__decorate([
+    type_graphql_1.Mutation(() => Boolean),
+    type_graphql_1.UseMiddleware(auth_1.isAuth),
+    __param(0, type_graphql_1.Arg("_id")),
+    __param(1, type_graphql_1.Arg("title")),
+    __param(2, type_graphql_1.Arg("content")),
+    __param(3, type_graphql_1.Ctx()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, String, Object]),
+    __metadata("design:returntype", Promise)
+], PostResolver.prototype, "updatePost", null);
 PostResolver = __decorate([
     type_graphql_1.Resolver()
 ], PostResolver);
 exports.PostResolver = PostResolver;
+const varifyUser = (payload, _id) => __awaiter(void 0, void 0, void 0, function* () {
+    const post = yield models_1.PostModel.findById(_id);
+    if (!post) {
+        throw new Error("post not found");
+    }
+    if (!post.author) {
+        throw new Error("posts must have an author");
+    }
+    const author = post.author;
+    if (!author._id) {
+        throw new Error("all users must have a unique id");
+    }
+    if (payload.userId != author._id) {
+        throw new Error("wrong user");
+    }
+});
 //# sourceMappingURL=Post.js.map

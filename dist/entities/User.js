@@ -23,7 +23,7 @@ __decorate([
     type_graphql_1.Field(),
     typegoose_1.prop({ required: true, default: false }),
     __metadata("design:type", Boolean)
-], User.prototype, "admin", void 0);
+], User.prototype, "isAdmin", void 0);
 __decorate([
     type_graphql_1.Field(),
     typegoose_1.prop({ required: true }),

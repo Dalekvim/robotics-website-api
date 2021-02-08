@@ -9,7 +9,7 @@ export class User {
 
   @Field()
   @Property({ required: true, default: false })
-  readonly admin: boolean;
+  readonly isAdmin: boolean;
 
   @Field()
   @Property({ required: true })

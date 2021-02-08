@@ -26,6 +26,7 @@ const auth_1 = require("../auth");
 const Comment_1 = require("../entities/Comment");
 const models_1 = require("../models");
 const type_graphql_1 = require("type-graphql");
+const mongoose_1 = require("mongoose");
 let CommentResolver = class CommentResolver {
     comments() {
         return models_1.CommentModel.find();
@@ -38,11 +39,14 @@ let CommentResolver = class CommentResolver {
     deleteComment(_id, { payload }) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
+                if (!payload) {
+                    throw new Error("no payload");
+                }
                 const user = yield models_1.UserModel.findById(payload.userId).exec();
                 if (!user) {
                     throw new Error("only admin can delete comments");
                 }
-                if (!user.admin) {
+                if (!user.isAdmin) {
                     return false;
                 }
                 yield models_1.CommentModel.findByIdAndDelete(_id);
@@ -54,24 +58,12 @@ let CommentResolver = class CommentResolver {
             return true;
         });
     }
-    updateComment(_id, content) {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                yield models_1.CommentModel.findByIdAndUpdate(_id, { content: content });
-            }
-            catch (err) {
-                console.error.bind(err);
-                return true;
-            }
-            return true;
-        });
-    }
 };
 __decorate([
     type_graphql_1.Query(() => [Comment_1.Comment]),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", mongoose_1.DocumentQuery)
 ], CommentResolver.prototype, "comments", null);
 __decorate([
     type_graphql_1.Mutation(() => Comment_1.Comment),
@@ -89,13 +81,6 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], CommentResolver.prototype, "deleteComment", null);
-__decorate([
-    __param(0, type_graphql_1.Arg("_id")),
-    __param(1, type_graphql_1.Arg("content")),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String]),
-    __metadata("design:returntype", Promise)
-], CommentResolver.prototype, "updateComment", null);
 CommentResolver = __decorate([
     type_graphql_1.Resolver()
 ], CommentResolver);
