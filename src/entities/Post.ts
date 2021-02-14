@@ -15,7 +15,7 @@ export class Post {
   readonly updatedAt: Date;
 
   @Field(() => User)
-  @Property({ ref: () => User, required: true })
+  @Property({ ref: "User", required: true })
   author: Ref<User>;
 
   @Field()

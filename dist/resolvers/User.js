@@ -29,6 +29,7 @@ const LoginResponse_1 = require("../entities/LoginResponse");
 const User_1 = require("../entities/User");
 const models_1 = require("../models");
 const type_graphql_1 = require("type-graphql");
+const mongoose_1 = require("mongoose");
 let UserResolver = class UserResolver {
     members() {
         return models_1.UserModel.find();
@@ -40,6 +41,16 @@ let UserResolver = class UserResolver {
             }
             catch (_a) {
                 throw new Error("Invalid accessToken.");
+            }
+        });
+    }
+    getUserById(_id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                return yield models_1.UserModel.findById(_id).exec();
+            }
+            catch (_a) {
+                throw new Error("Invalid ID.");
             }
         });
     }
@@ -92,7 +103,9 @@ let UserResolver = class UserResolver {
             }
             catch (err) {
                 console.error.bind(err);
+                return false;
             }
+            return true;
         });
     }
     updateName(_id, firstName, lastName, { payload }) {
@@ -133,7 +146,7 @@ __decorate([
     type_graphql_1.Query(() => [User_1.User]),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", mongoose_1.DocumentQuery)
 ], UserResolver.prototype, "members", null);
 __decorate([
     type_graphql_1.Query(() => User_1.User),
@@ -143,6 +156,13 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "currentUser", null);
+__decorate([
+    type_graphql_1.Query(() => User_1.User),
+    __param(0, type_graphql_1.Arg("_id")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], UserResolver.prototype, "getUserById", null);
 __decorate([
     type_graphql_1.Mutation(() => Boolean),
     __param(0, type_graphql_1.Arg("firstName")),
@@ -185,7 +205,8 @@ __decorate([
 __decorate([
     type_graphql_1.Mutation(() => Boolean),
     type_graphql_1.UseMiddleware(auth_1.isAuth),
-    __param(0, type_graphql_1.Arg("bio")), __param(1, type_graphql_1.Ctx()),
+    __param(0, type_graphql_1.Arg("bio")),
+    __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)

@@ -1,6 +1,6 @@
 import { isAuth } from "../auth";
 import { Post } from "../entities/Post";
-import { PostModel, UserModel } from "../models";
+import { PostModel } from "../models";
 import { MyContext } from "../types";
 import {
   Arg,
@@ -35,12 +35,16 @@ export class PostResolver {
         throw new Error("no payload");
       }
 
-      const author = await UserModel.findById(payload.userId).exec();
+      const author = payload.userId;
       if (!author) {
         throw new Error("login to create a post");
       }
 
-      await PostModel.create({ author, title, content });
+      await PostModel.create({
+        author,
+        title,
+        content,
+      });
     } catch (err) {
       console.error.bind(err);
       return false;

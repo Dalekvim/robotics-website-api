@@ -37,11 +37,15 @@ let PostResolver = class PostResolver {
                 if (!payload) {
                     throw new Error("no payload");
                 }
-                const author = yield models_1.UserModel.findById(payload.userId).exec();
+                const author = payload.userId;
                 if (!author) {
                     throw new Error("login to create a post");
                 }
-                yield models_1.PostModel.create({ author, title, content });
+                yield models_1.PostModel.create({
+                    author,
+                    title,
+                    content,
+                });
             }
             catch (err) {
                 console.error.bind(err);

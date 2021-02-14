@@ -13,21 +13,34 @@ import {
   Resolver,
   UseMiddleware,
 } from "type-graphql";
+import { DocumentType } from "@typegoose/typegoose";
+import { DocumentQuery } from "mongoose";
 
 @Resolver()
 export class UserResolver {
   @Query(() => [User])
-  members() {
+  members(): DocumentQuery<DocumentType<User>[], DocumentType<User>, {}> {
     return UserModel.find();
   }
 
   @Query(() => User)
   @UseMiddleware(isAuth)
-  async currentUser(@Ctx() { payload }: MyContext) {
+  async currentUser(
+    @Ctx() { payload }: MyContext
+  ): Promise<DocumentType<User> | null> {
     try {
       return await UserModel.findById(payload!.userId).exec();
     } catch {
       throw new Error("Invalid accessToken.");
+    }
+  }
+
+  @Query(() => User)
+  async getUserById(@Arg("_id") _id: string) {
+    try {
+      return await UserModel.findById(_id).exec();
+    } catch {
+      throw new Error("Invalid ID.");
     }
   }
 
@@ -37,7 +50,7 @@ export class UserResolver {
     @Arg("lastName") lastName: string,
     @Arg("email") email: string,
     @Arg("password") password: string
-  ) {
+  ): Promise<boolean> {
     try {
       const hashedPassword = await hash(password, 12);
       await UserModel.create({
@@ -86,7 +99,7 @@ export class UserResolver {
     @Arg("_id") _id: string,
     @Arg("password") password: string,
     @Ctx() { payload }: MyContext
-  ) {
+  ): Promise<boolean> {
     const hashedPassword = await hash(password, 12);
     try {
       if (payload!.userId !== _id) {
@@ -97,7 +110,9 @@ export class UserResolver {
       });
     } catch (err) {
       console.error.bind(err);
+      return false;
     }
+    return true;
   }
 
   @Mutation(() => Boolean)
@@ -107,7 +122,7 @@ export class UserResolver {
     @Arg("firstName") firstName: string,
     @Arg("lastName") lastName: string,
     @Ctx() { payload }: MyContext
-  ) {
+  ): Promise<boolean> {
     if (payload!.userId !== _id) {
       throw new Error("invalid token");
     }
@@ -126,7 +141,10 @@ export class UserResolver {
 
   @Mutation(() => Boolean)
   @UseMiddleware(isAuth)
-  async updateBio(@Arg("bio") bio: string, @Ctx() { payload }: MyContext) {
+  async updateBio(
+    @Arg("bio") bio: string,
+    @Ctx() { payload }: MyContext
+  ): Promise<boolean> {
     if (!payload) {
       throw new Error("invalid token");
     }
